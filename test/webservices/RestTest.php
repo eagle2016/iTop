@@ -26,6 +26,16 @@ class RestTest extends ItopDataTestCase
 		if (!empty($this->sTmpFile)){
 			unlink($this->sTmpFile);
 		}
+
+		/*if ((\MetaModel::GetConfig()->Get('secure_rest_services') == true)
+			&& !\UserRights::HasProfile('REST Services User')) {
+			//SELECT URP_UserProfile WHERE userlogin='admin' AND profile='REST Services User'
+			$oUserRestProfile = $this->createObject('URP_UserProfile', array(
+				'userlogin' => 'admin',
+				'profile' => 'REST Services User',
+			));
+			var_dump("Created " . $oUserRestProfile);
+		}*/
 	}
 
 	/**
@@ -40,8 +50,8 @@ class RestTest extends ItopDataTestCase
 		$description = date('dmY H:i:s');
 		$sOuputJson = $this->CreateTicketViaApi($description);
 		$aJson = json_decode($sOuputJson, true);
-		$this->assertContains("0", "".$aJson['code']);
-		$sUserRequestKey = array_key_first($aJson['objects']);
+		$this->assertContains("0", "".$aJson['code'], $sOuputJson);
+		$sUserRequestKey = $this->array_key_first($aJson['objects']);
 		$this->assertContains('UserRequest::', $sUserRequestKey);
 		$iId = $aJson['objects'][$sUserRequestKey]['key'];
 		$sExpectedJsonOuput=<<<JSON
@@ -62,6 +72,20 @@ JSON;
 	}
 
 	/**
+	 * array_key_first comes with PHP7.3
+	 * itop should also work with previous PHP versions
+	 */
+	private function array_key_first($aTab){
+		if (!is_array($aTab) || empty($aTab)){
+			return false;
+		}
+
+		foreach ($aTab as $sKey => $sVal){
+			return $sKey;
+		}
+	}
+
+	/**
 	 * @dataProvider BasicProvider
 	 * @param bool $bPassJsonDataAsFile
 	 */
@@ -73,8 +97,8 @@ JSON;
 		$description = date('dmY H:i:s');
 		$sOuputJson = $this->CreateTicketViaApi($description);
 		$aJson = json_decode($sOuputJson, true);
-		$this->assertContains("0", "".$aJson['code']);
-		$sUserRequestKey = array_key_first($aJson['objects']);
+		$this->assertContains("0", "".$aJson['code'], $sOuputJson);
+		$sUserRequestKey = $this->array_key_first($aJson['objects']);
 		$this->assertContains('UserRequest::', $sUserRequestKey);
 		$iId = $aJson['objects'][$sUserRequestKey]['key'];
 
@@ -105,8 +129,8 @@ JSON;
 
 		$sOuputJson = $this->CreateTicketViaApi($description);
 		$aJson = json_decode($sOuputJson, true);
-		$this->assertContains("0", "".$aJson['code']);
-		$sUserRequestKey = array_key_first($aJson['objects']);
+		$this->assertContains("0", "".$aJson['code'], $sOuputJson);
+		$sUserRequestKey = $this->array_key_first($aJson['objects']);
 		$this->assertContains('UserRequest::', $sUserRequestKey);
 		$iId = $aJson['objects'][$sUserRequestKey]['key'];
 
@@ -202,14 +226,15 @@ JSON;
 			$aPostFields['json_data'] = $sJsonDataContent;
 		}
 
-		curl_setopt($ch, CURLOPT_URL, "http://webserver/iTop/webservices/rest.php");
+		$sUrl = \MetaModel::GetConfig()->Get('app_root_url');
+		var_dump($sUrl);
+		curl_setopt($ch, CURLOPT_URL, "$sUrl/webservices/rest.php");
 		curl_setopt($ch, CURLOPT_POST, 1);// set post data to true
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $aPostFields);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		$sJson = curl_exec($ch);
 		curl_close ($ch);
 
-		var_dump($sJson);
 		return $sJson;
 	}
 
