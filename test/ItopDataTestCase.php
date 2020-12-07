@@ -408,8 +408,12 @@ class ItopDataTestCase extends ItopTestCase
 	 * @return \DBObject
 	 * @throws Exception
 	 */
-	protected function CreateUser($sLogin, $iProfileId)
+	protected function CreateUser($sLogin, $iProfileId, $sPassword=null)
 	{
+		if (empty($sPassword)){
+			$sPassword = $sLogin;
+		}
+
 		$oUserProfile = new URP_UserProfile();
 		$oUserProfile->Set('profileid', $iProfileId);
 		$oUserProfile->Set('reason', 'UNIT Tests');
@@ -417,7 +421,7 @@ class ItopDataTestCase extends ItopTestCase
 		$oUser = $this->createObject('UserLocal', array(
 			'contactid' => 2,
 			'login' => $sLogin,
-			'password' => $sLogin,
+			'password' => $sPassword,
 			'language' => 'EN US',
 			'profile_list' => $oSet,
 		));

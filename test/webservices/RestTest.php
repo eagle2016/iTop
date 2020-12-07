@@ -15,6 +15,7 @@ class RestTest extends ItopDataTestCase
 {
 	private $sTmpFile = "";
 	private $bPassJsonDataAsFile = false;
+	private $sLogin = 'rest_test';
 
 	/**
      * @throws Exception
@@ -28,14 +29,25 @@ class RestTest extends ItopDataTestCase
 		}
 
 		/*if ((\MetaModel::GetConfig()->Get('secure_rest_services') == true)
-			&& !\UserRights::HasProfile('REST Services User')) {
-			//SELECT URP_UserProfile WHERE userlogin='admin' AND profile='REST Services User'
-			$oUserRestProfile = $this->createObject('URP_UserProfile', array(
-				'userlogin' => 'admin',
-				'profile' => 'REST Services User',
-			));
-			var_dump("Created " . $oUserRestProfile);
-		}*/
+			&& !\UserRights::HasProfile('REST Services User')) {*/
+		$oRestProfile = \MetaModel::GetObjectFromOQL("SELECT URP_Profiles WHERE name = :name", array('name' => 'REST Services User'), true);
+		if (is_object($oRestProfile))
+		{
+
+			$oUser = $this->CreateUser($this->sLogin, $oRestProfile->GetKey(), "Iuytrez9876543ç_è-(");
+			
+			/*$oSearch = \DBObjectSearch::FromOQL("SELECT UserInternal WHERE login = :login");
+			$oSet = new \DBObjectSet($oSearch, array(), array('login' => $this->sLogin));
+			$oUser = $oSet->fetch();
+
+			$oUserProfile = new \URP_UserProfile();
+			$oUserProfile->Set('profileid', $oRestProfile->GetKey());
+			$oUserProfile->Set('reason', 'By definition, the administrator must have rest profile');
+			$oUserProfile->Set('userid', $oUser->GetKey());
+			$oObj = $oUserProfile->DBWrite();
+			echo $oObj; // . get_class($oObj) . ' ' . $oObj->GetKey();*/
+		}
+		//}
 	}
 
 	/**
@@ -212,8 +224,8 @@ JSON;
 		$ch = curl_init();
 		$aPostFields = [
 			'version' => '1.3',
-			'auth_user' => 'admin',
-			'auth_pwd' => 'admin',
+			'auth_user' => $this->sLogin,
+			'auth_pwd' => $this->sLogin,
 		];
 
 		if ($this->bPassJsonDataAsFile){
@@ -227,7 +239,6 @@ JSON;
 		}
 
 		$sUrl = \MetaModel::GetConfig()->Get('app_root_url');
-		var_dump($sUrl);
 		curl_setopt($ch, CURLOPT_URL, "$sUrl/webservices/rest.php");
 		curl_setopt($ch, CURLOPT_POST, 1);// set post data to true
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $aPostFields);
