@@ -13,9 +13,12 @@ use Exception;
  */
 class RestTest extends ItopDataTestCase
 {
+	const USE_TRANSACTION = false;
+
 	private $sTmpFile = "";
 	private $bPassJsonDataAsFile = false;
 	private $sLogin = 'rest_test';
+	private $sPassword = "Iuytrez9876543ç_è-(";
 
 	/**
      * @throws Exception
@@ -23,31 +26,21 @@ class RestTest extends ItopDataTestCase
     protected function setUp()
 	{
 		parent::setUp();
+		require_once(APPROOT.'application/startup.inc.php');
+		$this->CreateTestOrganization();
 
 		if (!empty($this->sTmpFile)){
 			unlink($this->sTmpFile);
 		}
 
-		/*if ((\MetaModel::GetConfig()->Get('secure_rest_services') == true)
-			&& !\UserRights::HasProfile('REST Services User')) {*/
 		$oRestProfile = \MetaModel::GetObjectFromOQL("SELECT URP_Profiles WHERE name = :name", array('name' => 'REST Services User'), true);
-		if (is_object($oRestProfile))
+		$oAdminProfile = \MetaModel::GetObjectFromOQL("SELECT URP_Profiles WHERE name = :name", array('name' => 'Administrator'), true);
+
+		if (is_object($oRestProfile) && is_object($oAdminProfile))
 		{
-
-			$oUser = $this->CreateUser($this->sLogin, $oRestProfile->GetKey(), "Iuytrez9876543ç_è-(");
-			
-			/*$oSearch = \DBObjectSearch::FromOQL("SELECT UserInternal WHERE login = :login");
-			$oSet = new \DBObjectSet($oSearch, array(), array('login' => $this->sLogin));
-			$oUser = $oSet->fetch();
-
-			$oUserProfile = new \URP_UserProfile();
-			$oUserProfile->Set('profileid', $oRestProfile->GetKey());
-			$oUserProfile->Set('reason', 'By definition, the administrator must have rest profile');
-			$oUserProfile->Set('userid', $oUser->GetKey());
-			$oObj = $oUserProfile->DBWrite();
-			echo $oObj; // . get_class($oObj) . ' ' . $oObj->GetKey();*/
+			$oUser = $this->CreateUser($this->sLogin, $oRestProfile->GetKey(), $this->sPassword);
+			$this->AddProfileToUser($oUser, $oAdminProfile->GetKey());
 		}
-		//}
 	}
 
 	/**
@@ -225,7 +218,7 @@ JSON;
 		$aPostFields = [
 			'version' => '1.3',
 			'auth_user' => $this->sLogin,
-			'auth_pwd' => $this->sLogin,
+			'auth_pwd' => $this->sPassword,
 		];
 
 		if ($this->bPassJsonDataAsFile){
