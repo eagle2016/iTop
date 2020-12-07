@@ -17,7 +17,7 @@ class RestTest extends ItopDataTestCase
 
 	private $sTmpFile = "";
 	private $bPassJsonDataAsFile = false;
-	private $sLogin = 'rest_test';
+	private $sLogin;
 	private $sPassword = "Iuytrez9876543ç_è-(";
 
 	/**
@@ -27,6 +27,7 @@ class RestTest extends ItopDataTestCase
 	{
 		parent::setUp();
 		require_once(APPROOT.'application/startup.inc.php');
+		$this->sLogin = "rest-user-" . date('dmYHis');
 		$this->CreateTestOrganization();
 
 		if (!empty($this->sTmpFile)){
